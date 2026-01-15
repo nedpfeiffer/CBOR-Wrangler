@@ -211,6 +211,19 @@ public class CborMessageEditorTab {
         }
     }
 
+    public static boolean isCborData(byte[] data) {
+        if (data == null || data.length == 0) {
+            return false;
+        }
+
+        try {
+            CBORObject.DecodeFromBytes(data);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private static boolean isCborContent(ByteArray body, String contentType) {
         // Check Content-Type header first
         if (contentType != null && contentType.toLowerCase().contains("application/cbor")) {
@@ -219,12 +232,7 @@ public class CborMessageEditorTab {
 
         // Try to detect by parsing
         if (body != null && body.length() > 0) {
-            try {
-                CBORObject.DecodeFromBytes(body.getBytes());
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return isCborData(body.getBytes());
         }
 
         return false;

@@ -2,6 +2,8 @@
 
 A Burp Suite extension that automatically detects and displays CBOR (Concise Binary Object Representation) data in a human-readable format.
 
+> **Disclaimer:** This extension was created on personal time without the use of any company resources.
+
 ## Installation
 
 **From Release:**
