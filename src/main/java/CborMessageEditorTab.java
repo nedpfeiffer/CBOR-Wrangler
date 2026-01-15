@@ -242,48 +242,55 @@ public class CborMessageEditorTab {
         StringBuilder sb = new StringBuilder();
         String indentStr = "  ".repeat(indent);
 
-        if (obj == null || obj.isNull()) {
-            sb.append("null");
-        } else if (obj.isTrue()) {
-            sb.append("true");
-        } else if (obj.isFalse()) {
-            sb.append("false");
-        } else if (obj.getType() == com.upokecenter.cbor.CBORType.Integer || 
-                   obj.getType() == com.upokecenter.cbor.CBORType.FloatingPoint) {
-            sb.append(obj.AsNumber().toString());
-        } else if (obj.getType() == com.upokecenter.cbor.CBORType.TextString) {
-            sb.append("\"").append(escapeString(obj.AsString())).append("\"");
-        } else if (obj.getType() == com.upokecenter.cbor.CBORType.ByteString) {
-            byte[] bytes = obj.GetByteString();
-            sb.append("h'").append(bytesToHex(bytes)).append("'");
-        } else if (obj.getType() == com.upokecenter.cbor.CBORType.Array) {
-            sb.append("[\n");
-            for (int i = 0; i < obj.size(); i++) {
-                sb.append(indentStr).append("  ");
-                sb.append(formatCborObject(obj.get(i), indent + 1));
-                if (i < obj.size() - 1) {
-                    sb.append(",");
+        try {
+            if (obj == null || obj.isNull()) {
+                sb.append("null");
+            } else if (obj.isTrue()) {
+                sb.append("true");
+            } else if (obj.isFalse()) {
+                sb.append("false");
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.Integer) {
+                sb.append(obj.AsInt64Value());
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.FloatingPoint) {
+                sb.append(obj.AsDoubleValue());
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.TextString) {
+                sb.append("\"").append(escapeString(obj.AsString())).append("\"");
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.ByteString) {
+                byte[] bytes = obj.GetByteString();
+                sb.append("h'").append(bytesToHex(bytes)).append("'");
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.Array) {
+                sb.append("[\n");
+                for (int i = 0; i < obj.size(); i++) {
+                    sb.append(indentStr).append("  ");
+                    sb.append(formatCborObject(obj.get(i), indent + 1));
+                    if (i < obj.size() - 1) {
+                        sb.append(",");
+                    }
+                    sb.append("\n");
                 }
-                sb.append("\n");
-            }
-            sb.append(indentStr).append("]");
-        } else if (obj.getType() == com.upokecenter.cbor.CBORType.Map) {
-            sb.append("{\n");
-            int count = 0;
-            for (CBORObject key : obj.getKeys()) {
-                sb.append(indentStr).append("  ");
-                sb.append(formatCborObject(key, indent + 1));
-                sb.append(": ");
-                sb.append(formatCborObject(obj.get(key), indent + 1));
-                if (count < obj.size() - 1) {
-                    sb.append(",");
+                sb.append(indentStr).append("]");
+            } else if (obj.getType() == com.upokecenter.cbor.CBORType.Map) {
+                sb.append("{\n");
+                int count = 0;
+                for (CBORObject key : obj.getKeys()) {
+                    sb.append(indentStr).append("  ");
+                    sb.append(formatCborObject(key, indent + 1));
+                    sb.append(": ");
+                    sb.append(formatCborObject(obj.get(key), indent + 1));
+                    if (count < obj.size() - 1) {
+                        sb.append(",");
+                    }
+                    sb.append("\n");
+                    count++;
                 }
-                sb.append("\n");
-                count++;
+                sb.append(indentStr).append("}");
+            } else {
+                // Fallback for any other types (tagged values, undefined, etc.)
+                sb.append(obj.toString());
             }
-            sb.append(indentStr).append("}");
-        } else {
-            sb.append(obj.toString());
+        } catch (Exception e) {
+            // If any conversion fails, use toString as fallback
+            sb.append("<").append(obj.getType()).append(": ").append(obj.toString()).append(">");
         }
 
         return sb.toString();
